@@ -1,32 +1,35 @@
 class Worker:
     def __init__(self, id: int):
-        self.id = id
-        self.neighbors = []
-        self.inc_m = []                 # incomming means
+        self.id = id                    # worker id
+        self.neighbors = []             # neighbors in network
+        self.inc_m = []                 # incomming message
         self.inc_c = []                 # incomming counts
-        self.out_m = 0
-        self.out_c = 0
-        self.recv_m = []
-        self.recv_c = []
-        self.x = 0
-        self.cur_sample = 0
-        self.sum_samples = 0
-        self.sum_counts = 0
+        self.out_m = 0                  # outgoing message
+        self.out_c = 0                  # outgoing count
+        self.recv_m = []                # receiver buffer messages
+        self.recv_c = []                # reviever buffer counts
+        self.x = 0                      # current mean estimnation
+        self.cur_sample = 0             # current sample
+        self.sum_samples = 0            # current sum of samples
+        self.sum_counts = 0             # current sum of counts
 
+    # adds a new neighbor to this worker
     def add_neighbor(self, neighbor):
         self.neighbors.append(neighbor)
 
+    # returns the outgoing message of the source
     def recieve_m(self, source):
         return source.get_out_m()
 
+    # returns the outgoing count of the source
     def recieve_c(self, source):
         return source.get_out_c()
 
-    # returns outgoing mean (m^{t-1})
+    # returns current outgoing mean (m^{t-1})
     def get_out_m(self):
         return self.out_m
 
-    # returns outgoing count (c^{t-1})
+    # returns current outgoing count (c^{t-1})
     def get_out_c(self):
         return self.out_c
 
@@ -38,6 +41,7 @@ class Worker:
     def send_c(self, value):
         self.out_c = value
 
+    # computes one timestep
     def step(self, sampler):
         # get sample
         self.cur_sample = sampler.sample()
@@ -65,6 +69,7 @@ class Worker:
 
         # avg estimate (x^t)
         self.x = self.sum_samples / self.sum_counts
-    
+
+    # returns current mean estimation
     def get_mean(self):
         return self.x
