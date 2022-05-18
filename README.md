@@ -1,25 +1,20 @@
 # RelaySGD
 
-Some POC implementations for the algorithms mentioned in this paper:
+Implementation of RelaySGD[^1] inside of Bagua[^2].
 
-https://doi.org/10.48550/arXiv.2110.04175
+[^1]: https://doi.org/10.48550/arXiv.2110.04175
 
-## Distributed Mean Estimation using RelaySum (Algorithm 5)
+[^2]: https://github.com/BaguaSys/bagua/tree/master
 
-The MST of a randomly generated network was used as topology in this experiment.
+## Observation so far
 
-```bash
-$ python relaysum.py
-```
+### CIFAR10
+CIFAR10 dataset, heterogeneously distributed with alpha=0.1 using the non iid dirichlet distribution split. 
 
-![RelaySum](relaysum_dist_mean_est.png)
+#### Comparing the decentraliced algorithm in bagua with RelaySGD
 
-## RelaySGD (Algorithm 1)
+![](plots/cifar_algo_comparison.png)
 
-In this experiment the function `f(x) = 3x + 4` was estimated using RelaySGD. The same topology was used as in the RelaySum experiment.
+#### Comparing different topologies of RelaySGD
 
-```bash
-$ python relaysgd.py
-```
-
-![RelaySGD](relaysgd.png)
+![](plots/cifar_topo_comparison.png)
