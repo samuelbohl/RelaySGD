@@ -65,7 +65,7 @@ class RelayAlgorithmImpl(AlgorithmImpl):
         elif topology == "double_binary_trees":
             from topologies import DoubleBinaryTreeTopology
             self.topology  = DoubleBinaryTreeTopology(bagua.get_world_size())
-        elif topology == "random":
+        elif topology == "random_binary_tree":
             from topologies import RandomBinaryTreeTopology
             self.topology  = RandomBinaryTreeTopology(bagua.get_world_size())
         else:
