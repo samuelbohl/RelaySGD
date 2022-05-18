@@ -175,9 +175,9 @@ def main():
     )
     parser.add_argument(
         "--topology",
-        default=0.1,
-        type=float,
-        help="Alpha parameter for the non iid dirichlet distribution of the data",
+        default="binary_tree",
+        type=str,
+        help="chain, binary_tree, random_binary_tree, double_binary_trees",
     )
 
     args = parser.parse_args()
@@ -222,7 +222,7 @@ def main():
     dataset2 = datasets.MNIST("./data", train=False, transform=transform)
 
     train_sampler = DistributedHeterogeneousSampler(
-        dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_rank(), alpha=0.1
+        dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_rank(), alpha=args.alpha
     )
     train_kwargs.update(
         {
@@ -268,8 +268,7 @@ def main():
         )
     elif args.algorithm == "relay":
         from algorithm import RelayAlgorithm
-        #algorithm = RelayAlgorithm(optimizer=optimizer)
-        algorithm = RelayAlgorithm(optimizer=optimizer, topology="random")
+        algorithm = RelayAlgorithm(optimizer=optimizer, topology=args.topology)
     else:
         raise NotImplementedError
 

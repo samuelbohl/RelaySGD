@@ -139,6 +139,18 @@ def main():
         default=False,
         help="fuse optimizer or not",
     )
+    parser.add_argument(
+        "--alpha",
+        default=0.1,
+        type=float,
+        help="Alpha parameter for the non iid dirichlet distribution of the data",
+    )
+    parser.add_argument(
+        "--topology",
+        default="binary_tree",
+        type=str,
+        help="chain, binary_tree, random_binary_tree, double_binary_trees",
+    )
 
     args = parser.parse_args()
     if args.set_deterministic:
@@ -193,7 +205,7 @@ def main():
         ]))
 
     train_sampler = DistributedHeterogeneousSampler(
-        dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_rank(), alpha=0.1
+        dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_rank(), alpha=args.alpha
     )
     # train_sampler = torch.utils.data.distributed.DistributedSampler(
     #     dataset1, num_replicas=bagua.get_world_size(), rank=bagua.get_rank()
@@ -243,7 +255,7 @@ def main():
         )
     elif args.algorithm == "relay":
         from algorithm import RelayAlgorithm
-        algorithm = RelayAlgorithm(optimizer=optimizer, topology="random")
+        algorithm = RelayAlgorithm(optimizer=optimizer, topology=args.topology)
     else:
         raise NotImplementedError
 
