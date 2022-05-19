@@ -205,7 +205,7 @@ def main():
         ]))
 
     train_sampler = DistributedHeterogeneousSampler(
-        dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_rank(), alpha=args.alpha
+        dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_local_rank(), alpha=args.alpha
     )
     # train_sampler = torch.utils.data.distributed.DistributedSampler(
     #     dataset1, num_replicas=bagua.get_world_size(), rank=bagua.get_rank()
@@ -220,8 +220,8 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset1, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
-    from vgg_models import vgg11
-    model = vgg11().cuda()
+    from vgg_models import vgg11_bn
+    model = vgg11_bn().cuda()
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     if args.algorithm == "gradient_allreduce":
