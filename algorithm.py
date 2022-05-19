@@ -68,13 +68,16 @@ class RelayAlgorithmImpl(AlgorithmImpl):
         elif topology == "random_binary_tree":
             from topologies import RandomBinaryTreeTopology
             self.topology  = RandomBinaryTreeTopology(bagua.get_world_size())
+        elif topology == "random_double_binary_trees":
+            from topologies import RandomDoubleBinaryTreeTopology
+            self.topology = RandomDoubleBinaryTreeTopology(bagua.get_world_size())
         else:
             raise NotImplementedError
         self.neighbours = self.topology.neighbors(self.rank)
         
         # allocate send and receiver buffers
-        if self.topology_str == "double_binary_trees":
-            # Double Binary Tree
+        if "double_binary_trees" in self.topology_str:
+            # (Random) Double Binary Tree
             neighbours_list, neighbours_list_rev = self.neighbours
             self.size_odds = (self.param_size + 1) // 2
             for nb in neighbours_list:
@@ -145,7 +148,7 @@ class RelayAlgorithmImpl(AlgorithmImpl):
                 return
             
             # If random trees, build a new tree every 10 iterations
-            if self.topology_str == "random" and bagua_ddp.bagua_train_step_counter % 10 == 0:
+            if "random" in self.topology_str and bagua_ddp.bagua_train_step_counter % 10 == 0:
                 self.topology.build_tree()
 
             def pack(tensors):
@@ -220,7 +223,7 @@ class RelayAlgorithmImpl(AlgorithmImpl):
                 self.c_recv[neighbour] = self.c_temp.clone().detach()
 
             # iterate over neighbours
-            if self.topology_str == "double_binary_trees":
+            if "double_binary_trees" in self.topology_str:
                 # Double Binary Trees
                 neighbours_list, neighbours_list_rev = self.neighbours
                 # First odds
@@ -252,7 +255,7 @@ class RelayAlgorithmImpl(AlgorithmImpl):
                         recv_messages(neighbour)
                         send_messages(neighbour)
 
-            if self.topology_str == "double_binary_trees":
+            if "double_binary_trees" in self.topology_str:
                 self.n_odd = 1 + sum(self.c_recv_odd.values())
                 self.n_even = 1 + sum(self.c_recv_even.values())
                 self.x_buffered[0::2].add_(sum(self.m_recv_odd.values())).div_(self.n_odd)
