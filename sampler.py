@@ -124,7 +124,7 @@ class DistributedHeterogeneousSampler(Sampler):
             idx_batch += _idx_batch
         return idx_batch
 
-    def equalize_size(self, method="cutoff_min"):
+    def equalize_size(self, method="even"):
         if method == "cutoff_min":
             random.seed(self.seed)
             min_len = 9999999
@@ -135,8 +135,18 @@ class DistributedHeterogeneousSampler(Sampler):
             for idx in range(len(self.indices)):
                 random.shuffle(self.indices[idx])
                 self.indices[idx] = self.indices[idx][:min_len]
-        elif method == "evenly":
-            self.indices = np.array_split(
-                np.concatenate(self.indices), self.num_workers
-            )
+        elif method == "even":
+            # flatten list
+            flatten_list = sum(self.indices, [])
+            # split evenly
+            even_list = list()
+            step_size = len(self.dataset) // self.num_workers
+            for i in range(0, len(self.dataset), step_size):
+                even_list.append(flatten_list[i:i+step_size])
+            self.indices = even_list
+            # shuffle the split data separately for each worker 
+            for idx in range(len(self.indices)):
+                random.shuffle(self.indices[idx])
+        else:
+            raise NotImplementedError
        
