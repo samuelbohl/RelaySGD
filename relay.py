@@ -146,9 +146,9 @@ class RelayAlgorithmImpl(AlgorithmImpl):
         def hook(optimizer: torch.optim.Optimizer):
             if not self._should_communicate(bagua_ddp):
                 return
-            
-            # If random trees, build a new tree every 10 iterations
-            if "random" in self.topology_str and bagua_ddp.bagua_train_step_counter % 10 == 0:
+
+            # If random trees, build a new tree every epoch
+            if "random" in self.topology_str and (bagua_ddp.bagua_train_step_counter % 477) == 0:
                 self.topology.build_tree()
 
             def pack(tensors):
