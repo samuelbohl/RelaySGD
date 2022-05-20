@@ -220,8 +220,8 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset1, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
-    from vgg_models import vgg11_bn
-    model = vgg11_bn().cuda()
+    from vgg_models import vgg11
+    model = vgg11().cuda()
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     if args.algorithm == "gradient_allreduce":
@@ -254,8 +254,13 @@ def main():
             sync_interval_ms=args.async_sync_interval,
         )
     elif args.algorithm == "relay":
-        from algorithm import RelayAlgorithm
+        from relay import RelayAlgorithm
+
         algorithm = RelayAlgorithm(optimizer=optimizer, topology=args.topology)
+    elif args.algorithm == "allreduce":
+        from allreduce import AllreduceAlgorithm
+        
+        algorithm = AllreduceAlgorithm(optimizer=optimizer)
     else:
         raise NotImplementedError
 
