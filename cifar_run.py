@@ -284,7 +284,7 @@ def main():
         if args.algorithm == "async":
             model.bagua_algorithm.abort(model)
 
-        if args.algorithm == "relay" and "random" in args.topology:
+        if args.algorithm == "relay" and "random" in args.topology and epoch > 50:
             model.bagua_algorithm.rebuild_tree()
 
         test(model, test_loader)
