@@ -147,10 +147,6 @@ class RelayAlgorithmImpl(AlgorithmImpl):
             if not self._should_communicate(bagua_ddp):
                 return
 
-            # If random trees, build a new tree every epoch
-            if "random" in self.topology_str and (bagua_ddp.bagua_train_step_counter % 477) == 0:
-                self.topology.build_tree()
-
             def pack(tensors):
                 """Packs a list of tensors into one buffer for sending to other workers"""
                 buffer = torch.cat([t.view(-1) for t in tensors])  # copies
@@ -286,6 +282,10 @@ class RelayAlgorithmImpl(AlgorithmImpl):
         self._init_states(bucket)
         torch.cuda.synchronize()
         bucket.clear_ops()
+    
+    def rebuild_tree(self):
+        if "random" in self.topology_str:
+            self.topology.build_tree()
 
 
 class RelayAlgorithm(Algorithm):
