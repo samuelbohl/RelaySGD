@@ -1,3 +1,4 @@
+# code from https://github.com/epfml/relaysgd/blob/main/tasks/models/vgg.py
 import math
 
 import torch.nn as nn

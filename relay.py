@@ -32,18 +32,19 @@ class RelayAlgorithmImpl(AlgorithmImpl):
             hierarchical (bool): Enable hierarchical communication.
             communication_interval (int): Number of iterations between two communication steps.
             optimizer (Optimizer): A torch Optimizer initialized with model parameters.
-            topology (str): Can be ``"binary_tree"``, ``"chain"`` or ``"double_binary_tree"``.
+            topology (str): Can be ``"binary_tree"``, ``"random_binary_tree"``,  ``"chain"``, 
+            ``"double_binary_trees"`` or ``"random_double_binary_trees"``.
         """
         super(RelayAlgorithmImpl, self).__init__(process_group)
         self.hierarchical = hierarchical
         self.communication_interval = communication_interval
         self.cuda_event = torch.cuda.Event()
         self.m_recv = {}
-        self.m_recv_odd = {}
         self.m_recv_even = {}
+        self.m_recv_odd = {}
         self.c_recv = {}
-        self.c_recv_odd = {}
         self.c_recv_even = {}
+        self.c_recv_odd = {}
         self.ones = torch.ones(1, dtype=torch.float32).cuda()
         self.c_temp = torch.zeros(1, dtype=torch.float32).cuda()
         self.n = torch.zeros(1, dtype=torch.float32).cuda()
@@ -79,19 +80,19 @@ class RelayAlgorithmImpl(AlgorithmImpl):
         if "double_binary_trees" in self.topology_str:
             # (Random) Double Binary Tree
             neighbours_list, neighbours_list_rev = self.neighbours
-            self.size_odds = (self.param_size + 1) // 2
+            self.size_evens = (self.param_size + 1) // 2
             for nb in neighbours_list:
-                self.m_recv_odd[nb] = torch.zeros(self.size_odds, dtype=torch.float32).cuda()
-                self.c_recv_odd[nb] = torch.ones(1, dtype=torch.float32).cuda()
-            self.size_evens = self.param_size // 2
-            for nb in neighbours_list_rev:
                 self.m_recv_even[nb] = torch.zeros(self.size_evens, dtype=torch.float32).cuda()
                 self.c_recv_even[nb] = torch.ones(1, dtype=torch.float32).cuda()
+            self.size_odds = self.param_size // 2
+            for nb in neighbours_list_rev:
+                self.m_recv_odd[nb] = torch.zeros(self.size_odds, dtype=torch.float32).cuda()
+                self.c_recv_odd[nb] = torch.ones(1, dtype=torch.float32).cuda()
 
-            self.m_send_odd = torch.zeros(self.size_odds, dtype=torch.float32).cuda()
             self.m_send_even = torch.zeros(self.size_evens, dtype=torch.float32).cuda()
-            self.c_send_odd = torch.ones(1, dtype=torch.float32).cuda()
+            self.m_send_odd = torch.zeros(self.size_odds, dtype=torch.float32).cuda()
             self.c_send_even = torch.ones(1, dtype=torch.float32).cuda()
+            self.c_send_odd = torch.ones(1, dtype=torch.float32).cuda()
         else:
             # All other togologies
             for nb in self.neighbours:
@@ -173,35 +174,37 @@ class RelayAlgorithmImpl(AlgorithmImpl):
             x_i_buffered, shapes = pack(x_i)
             self.x_buffered = torch.clone(x_i_buffered)
 
-            def dbt_send_messages(neighbour, odd):
-                if odd:
+            def dbt_send_messages(neighbour, even):
+                """Sends splitted model and count messages to the corresponding binary tree"""
+                if even:
                     # send messages
-                    self.m_send_odd.copy_(sum_wo(self.m_recv_odd, neighbour) + x_i_buffered[0::2])
-                    bagua.send(self.m_send_odd, neighbour)
-
-                    # send corresponding counters
-                    self.c_send_odd.copy_(sum_wo((self.c_recv_odd), neighbour) + self.ones)
-                    bagua.send(self.c_send_odd, neighbour)
-                else:
-                    # send messages
-                    self.m_send_even.copy_(sum_wo(self.m_recv_even, neighbour) + x_i_buffered[1::2])
+                    self.m_send_even.copy_(sum_wo(self.m_recv_even, neighbour) + x_i_buffered[0::2])
                     bagua.send(self.m_send_even, neighbour)
 
                     # send corresponding counters
                     self.c_send_even.copy_(sum_wo((self.c_recv_even), neighbour) + self.ones)
                     bagua.send(self.c_send_even, neighbour)
-
-            def dbt_recv_messages(neighbour, odd):
-                if odd:
-                    # recieve messages
-                    bagua.recv(self.m_recv_odd[neighbour], neighbour)
-                    bagua.recv(self.c_temp, neighbour)
-                    self.c_recv_odd[neighbour] = self.c_temp.clone().detach()
                 else:
+                    # send messages
+                    self.m_send_odd.copy_(sum_wo(self.m_recv_odd, neighbour) + x_i_buffered[1::2])
+                    bagua.send(self.m_send_odd, neighbour)
+
+                    # send corresponding counters
+                    self.c_send_odd.copy_(sum_wo((self.c_recv_odd), neighbour) + self.ones)
+                    bagua.send(self.c_send_odd, neighbour)
+
+            def dbt_recv_messages(neighbour, even):
+                """Recieves splitted model and count messages from the corresponding binary tree"""
+                if even:
                     # recieve messages
                     bagua.recv(self.m_recv_even[neighbour], neighbour)
                     bagua.recv(self.c_temp, neighbour)
                     self.c_recv_even[neighbour] = self.c_temp.clone().detach()
+                else:
+                    # recieve messages
+                    bagua.recv(self.m_recv_odd[neighbour], neighbour)
+                    bagua.recv(self.c_temp, neighbour)
+                    self.c_recv_odd[neighbour] = self.c_temp.clone().detach()
 
             def send_messages(neighbour):
                 # send messages
@@ -222,7 +225,8 @@ class RelayAlgorithmImpl(AlgorithmImpl):
             if "double_binary_trees" in self.topology_str:
                 # Double Binary Trees
                 neighbours_list, neighbours_list_rev = self.neighbours
-                # First odds
+
+                # Send/Recv evens
                 for neighbour in neighbours_list:
                     # Deadlock avoidance
                     if neighbour < self.rank:
@@ -231,7 +235,8 @@ class RelayAlgorithmImpl(AlgorithmImpl):
                     else:
                         dbt_recv_messages(neighbour, True)
                         dbt_send_messages(neighbour, True)
-                # Then evens
+                
+                # Send/Recv odds
                 for neighbour in neighbours_list_rev:
                     # Deadlock avoidance
                     if neighbour < self.rank:
@@ -251,13 +256,13 @@ class RelayAlgorithmImpl(AlgorithmImpl):
                         recv_messages(neighbour)
                         send_messages(neighbour)
 
+            # update n and x_i
             if "double_binary_trees" in self.topology_str:
-                self.n_odd = 1 + sum(self.c_recv_odd.values())
                 self.n_even = 1 + sum(self.c_recv_even.values())
-                self.x_buffered[0::2].add_(sum(self.m_recv_odd.values())).div_(self.n_odd)
-                self.x_buffered[1::2].add_(sum(self.m_recv_even.values())).div_(self.n_even)
+                self.n_odd = 1 + sum(self.c_recv_odd.values())
+                self.x_buffered[0::2].add_(sum(self.m_recv_even.values())).div_(self.n_even)
+                self.x_buffered[1::2].add_(sum(self.m_recv_odd.values())).div_(self.n_odd)
             else:
-                # update n and x_i
                 self.n = 1 + sum(self.c_recv.values())
                 self.x_buffered.add_(sum(self.m_recv.values())).div_(self.n)
 
