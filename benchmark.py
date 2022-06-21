@@ -12,6 +12,8 @@ import logging
 import bagua.torch_api as bagua
 from sampler import DistributedHeterogeneousSampler
 
+# python3 -m bagua.distributed.launch --nproc_per_node=8 benchmark.py --algorithm relay 2>&1 | tee ./logs/test.log
+
 def train(args, model, train_loader, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -82,6 +84,12 @@ def main():
         help="input batch size for testing (default: 1000)",
     )
     parser.add_argument(
+        "--experiment",
+        type=str,
+        default="cifar10-vgg11",
+        help="cifar10-vgg11, cifar100-resnet20",
+    )
+    parser.add_argument(
         "--epochs",
         type=int,
         default=200,
@@ -93,7 +101,7 @@ def main():
         type=float,
         default=0.05,
         metavar="LR",
-        help="learning rate (default: 0.1)",
+        help="learning rate (default: 0.01)",
     )
     parser.add_argument(
         "--gamma",
@@ -179,37 +187,47 @@ def main():
     normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                      std=[0.229, 0.224, 0.225])
 
+    train_dataset_args = {"root":"./data", "train": True, "download": True, "transform": transforms.Compose([
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomCrop(32, 4),
+        transforms.ToTensor(),
+        normalize,
+    ])}
+
+    test_dataset_args = {"root": "./data", "train": False, "transform": transforms.Compose([
+        transforms.ToTensor(),
+        normalize,
+    ])}
+
     if bagua.get_local_rank() == 0:
-        dataset1 = datasets.CIFAR10(
-            "./data", train=True, download=True, transform=transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(32, 4),
-            transforms.ToTensor(),
-            normalize,
-        ]))
+        if args.experiment == "cifar10-vgg11":
+            dataset1 = datasets.CIFAR10(**train_dataset_args)
+        elif args.experiment == "cifar100-resnet20":
+            dataset1 = datasets.CIFAR100(**train_dataset_args)
+        else:
+            raise NotImplementedError 
         torch.distributed.barrier()
     else:
         torch.distributed.barrier()
-        dataset1 = datasets.CIFAR10(
-            "./data", train=True, download=True, transform=transforms.Compose([
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomCrop(32, 4),
-            transforms.ToTensor(),
-            normalize,
-        ]))
+        if args.experiment == "cifar10-vgg11":
+            dataset1 = datasets.CIFAR10(**train_dataset_args)
+        elif args.experiment == "cifar100-resnet20":
+            dataset1 = datasets.CIFAR100(**train_dataset_args)
+        else:
+            raise NotImplementedError 
 
-    dataset2 = datasets.CIFAR10(
-            "./data", train=False, transform=transforms.Compose([
-            transforms.ToTensor(),
-            normalize,
-        ]))
+    
+    if args.experiment == "cifar10-vgg11":
+        dataset2 = datasets.CIFAR10(**test_dataset_args)
+    elif args.experiment == "cifar100-resnet20":
+        dataset2 = datasets.CIFAR100(**test_dataset_args)
+    else:
+        raise NotImplementedError 
 
     train_sampler = DistributedHeterogeneousSampler(
         dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_local_rank(), alpha=args.alpha
     )
-    # train_sampler = torch.utils.data.distributed.DistributedSampler(
-    #     dataset1, num_replicas=bagua.get_world_size(), rank=bagua.get_rank()
-    # )
+
     train_kwargs.update(
         {
             "sampler": train_sampler,
@@ -220,8 +238,13 @@ def main():
     train_loader = torch.utils.data.DataLoader(dataset1, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
-    from vgg_models import vgg11
-    model = vgg11().cuda()
+    if args.experiment == "cifar10-vgg11":
+        from models.vgg import vgg11
+        model = vgg11().cuda()
+    elif args.experiment == "cifar100-resnet20":
+        from models.resnet import ResNet20
+        model = ResNet20().cuda()
+    
     optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
 
     if args.algorithm == "gradient_allreduce":
@@ -275,7 +298,10 @@ def main():
         optimizer = bagua.contrib.fuse_optimizer(optimizer)
 
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+    import time
+    
     for epoch in range(1, args.epochs + 1):
+        start = time.time()
         if args.algorithm == "async":
             model.bagua_algorithm.resume(model)
 
@@ -284,12 +310,14 @@ def main():
         if args.algorithm == "async":
             model.bagua_algorithm.abort(model)
 
-        if args.algorithm == "relay" and "random" in args.topology and epoch > 50:
+        if args.algorithm == "relay" and "random" in args.topology and epoch > 70 and epoch % 10 == 1:
+            if bagua.get_local_rank() == 0: logging.info('REBUILDING TREE')
             model.bagua_algorithm.rebuild_tree()
 
         test(model, test_loader)
         scheduler.step()
-    
+        end = time.time()
+        if bagua.get_local_rank() == 0: logging.info('Epoch time: {}'.format(end-start))
     if args.save_model:
         torch.save(model.state_dict(), "mnist_cnn.pt")
     
