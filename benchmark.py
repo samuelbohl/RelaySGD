@@ -104,6 +104,13 @@ def main():
         help="learning rate (default: 0.01)",
     )
     parser.add_argument(
+        "--momentum",
+        type=float,
+        default=0.9,
+        metavar="MOM",
+        help="momentum (default: 0.9)",
+    )
+    parser.add_argument(
         "--gamma",
         type=float,
         default=0.9,
@@ -245,7 +252,7 @@ def main():
         from models.resnet import ResNet20
         model = ResNet20().cuda()
     
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=5e-4)
 
     if args.algorithm == "gradient_allreduce":
         from bagua.torch_api.algorithms import gradient_allreduce
