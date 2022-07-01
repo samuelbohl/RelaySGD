@@ -180,6 +180,7 @@ def main():
 
     torch.cuda.set_device(bagua.get_local_rank())
     bagua.init_process_group()
+    print('GO')
 
     logging.basicConfig(format="%(levelname)s:%(message)s", level=logging.ERROR)
     if bagua.get_rank() == 0:
@@ -206,22 +207,29 @@ def main():
         normalize,
     ])}
 
+    print('ready for dataset')
+
     if bagua.get_local_rank() == 0:
+        print('P0 loading started')
         if args.experiment == "cifar10-vgg11":
             dataset1 = datasets.CIFAR10(**train_dataset_args)
         elif args.experiment == "cifar100-resnet20":
             dataset1 = datasets.CIFAR100(**train_dataset_args)
         else:
             raise NotImplementedError 
-        bagua.barrier()
+        bagua.communication.barrier()
+        print('P0 loading done')
     else:
-        bagua.barrier()
+        print('Px before barrier')
+        bagua.communication.barrier()
+        print('Px after barrier')
         if args.experiment == "cifar10-vgg11":
             dataset1 = datasets.CIFAR10(**train_dataset_args)
         elif args.experiment == "cifar100-resnet20":
             dataset1 = datasets.CIFAR100(**train_dataset_args)
         else:
             raise NotImplementedError 
+        print('Px done loading')
 
     
     if args.experiment == "cifar10-vgg11":
@@ -230,6 +238,7 @@ def main():
         dataset2 = datasets.CIFAR100(**test_dataset_args)
     else:
         raise NotImplementedError 
+    print('Model loaded')
 
     train_sampler = DistributedHeterogeneousSampler(
         dataset=dataset1, num_workers=bagua.get_world_size(), rank=bagua.get_local_rank(), alpha=args.alpha
