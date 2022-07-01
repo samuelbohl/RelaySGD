@@ -217,15 +217,7 @@ def main():
             dataset1 = datasets.CIFAR100(**train_dataset_args)
         else:
             raise NotImplementedError 
-        print('P0 before barrier')
-        tensor = torch.ones([1], device=torch.cuda.current_device())
-        bagua.allreduce_inplace(tensor, op=bagua.ReduceOp.SUM)
-        print('P0 loading done')
     else:
-        print('Px before barrier')
-        tensor = torch.ones([1], device=torch.cuda.current_device())
-        bagua.allreduce_inplace(tensor, op=bagua.ReduceOp.SUM)
-        print('Px after barrier')
         if args.experiment == "cifar10-vgg11":
             dataset1 = datasets.CIFAR10(**train_dataset_args)
         elif args.experiment == "cifar100-resnet20":
