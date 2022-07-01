@@ -213,9 +213,9 @@ def main():
             dataset1 = datasets.CIFAR100(**train_dataset_args)
         else:
             raise NotImplementedError 
-        torch.distributed.barrier()
+        bagua.barrier()
     else:
-        torch.distributed.barrier()
+        bagua.barrier()
         if args.experiment == "cifar10-vgg11":
             dataset1 = datasets.CIFAR10(**train_dataset_args)
         elif args.experiment == "cifar100-resnet20":
