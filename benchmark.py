@@ -218,11 +218,13 @@ def main():
         else:
             raise NotImplementedError 
         print('P0 before barrier')
-        bagua.communication.barrier()
+        tensor = torch.ones([1], device=torch.cuda.current_device())
+        bagua.allreduce_inplace(tensor, op=bagua.ReduceOp.SUM)
         print('P0 loading done')
     else:
         print('Px before barrier')
-        bagua.communication.barrier()
+        tensor = torch.ones([1], device=torch.cuda.current_device())
+        bagua.allreduce_inplace(tensor, op=bagua.ReduceOp.SUM)
         print('Px after barrier')
         if args.experiment == "cifar10-vgg11":
             dataset1 = datasets.CIFAR10(**train_dataset_args)
