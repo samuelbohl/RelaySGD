@@ -217,6 +217,7 @@ def main():
             dataset1 = datasets.CIFAR100(**train_dataset_args)
         else:
             raise NotImplementedError 
+        print('P0 before barrier')
         bagua.communication.barrier()
         print('P0 loading done')
     else:
