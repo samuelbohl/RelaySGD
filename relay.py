@@ -32,8 +32,7 @@ class RelayAlgorithmImpl(AlgorithmImpl):
             hierarchical (bool): Enable hierarchical communication.
             communication_interval (int): Number of iterations between two communication steps.
             optimizer (Optimizer): A torch Optimizer initialized with model parameters.
-            topology (str): Can be ``"binary_tree"``, ``"random_binary_tree"``,  ``"chain"``, 
-            ``"double_binary_trees"`` or ``"random_double_binary_trees"``.
+            topology (str): Can be ``"binary_tree"``,  ``"chain"``, ``"double_binary_trees"``.
         """
         super(RelayAlgorithmImpl, self).__init__(process_group)
         self.hierarchical = hierarchical
@@ -66,19 +65,13 @@ class RelayAlgorithmImpl(AlgorithmImpl):
         elif topology == "double_binary_trees":
             from topologies import DoubleBinaryTreeTopology
             self.topology  = DoubleBinaryTreeTopology(bagua.get_world_size())
-        elif topology == "random_binary_tree":
-            from topologies import RandomBinaryTreeTopology
-            self.topology  = RandomBinaryTreeTopology(bagua.get_world_size())
-        elif topology == "random_double_binary_trees":
-            from topologies import RandomDoubleBinaryTreeTopology
-            self.topology = RandomDoubleBinaryTreeTopology(bagua.get_world_size())
         else:
             raise NotImplementedError
         self.neighbours = self.topology.neighbors(self.rank)
         
         # allocate send and receiver buffers
         if "double_binary_trees" in self.topology_str:
-            # (Random) Double Binary Tree
+            # Double Binary Tree
             neighbours_list, neighbours_list_rev = self.neighbours
             self.size_evens = (self.param_size + 1) // 2
             for nb in neighbours_list:
@@ -287,10 +280,6 @@ class RelayAlgorithmImpl(AlgorithmImpl):
         self._init_states(bucket)
         torch.cuda.synchronize()
         bucket.clear_ops()
-    
-    def rebuild_tree(self):
-        if "random" in self.topology_str:
-            self.topology.build_tree()
 
 
 class RelayAlgorithm(Algorithm):
@@ -308,7 +297,7 @@ class RelayAlgorithm(Algorithm):
             hierarchical (bool): Enable hierarchical communication.
             communication_interval (int): Number of iterations between two communication steps.
             optimizer (Optimizer): A torch Optimizer initialized with model parameters.
-            topology (str): Can be ``"binary_tree"`` or ``"chain"``.
+            topology (str): Can be `"random_binary_trees"`` , ``"binary_tree"`` or ``"chain"``.
         """
         self.hierarchical = hierarchical
         self.communication_interval = communication_interval

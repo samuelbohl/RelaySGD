@@ -16,6 +16,7 @@ from sampler import DistributedHeterogeneousSampler
 
 def train(args, model, train_loader, optimizer, epoch):
     model.train()
+    isnan = False
     for batch_idx, (data, target) in enumerate(train_loader):
 
         data, target = data.cuda(), target.cuda()
@@ -37,6 +38,15 @@ def train(args, model, train_loader, optimizer, epoch):
                     loss.item(),
                 )
             )
+            # handbreak when loss becomes nan
+            if np.isnan(loss.item()):
+                isnan = True
+    
+    # handbreak when loss becomes nan
+    if isnan:
+        raise SystemExit(0)
+
+        
 
 
 def test(model, test_loader):
@@ -101,7 +111,7 @@ def main():
         type=float,
         default=0.05,
         metavar="LR",
-        help="learning rate (default: 0.01)",
+        help="learning rate (default: 0.05)",
     )
     parser.add_argument(
         "--momentum",
@@ -164,7 +174,7 @@ def main():
         "--topology",
         default="binary_tree",
         type=str,
-        help="chain, binary_tree, random_binary_tree, double_binary_trees",
+        help="chain, binary_tree, double_binary_trees",
     )
 
     args = parser.parse_args()
@@ -316,10 +326,6 @@ def main():
 
         if args.algorithm == "async":
             model.bagua_algorithm.abort(model)
-
-        if args.algorithm == "relay" and "random" in args.topology and epoch > 70 and epoch % 10 == 1:
-            if bagua.get_local_rank() == 0: logging.info('REBUILDING TREE')
-            model.bagua_algorithm.rebuild_tree()
 
         test(model, test_loader)
         scheduler.step()
