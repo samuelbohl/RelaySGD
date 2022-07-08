@@ -97,7 +97,7 @@ parser.add_argument(
     "--topology",
     default="binary_tree",
     type=str,
-    help="chain, binary_tree, random_binary_tree, double_binary_trees",
+    help="chain, binary_tree, double_binary_trees",
 )
 
 args = parser.parse_args()

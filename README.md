@@ -9,12 +9,15 @@ Implementation of the decentralized learning algorithm RelaySGD[^1] inside of Ba
 ## Observation so far
 
 ### CIFAR10 - VGG11
-CIFAR10 dataset, heterogeneously distributed with alpha=0.1 using the non iid dirichlet distribution split. 
 
 #### Comparing the decentraliced algorithm in bagua with RelaySGD
 
-![](plots/cifar_algo_comparison.png)
+![](plots/algo_comparison.png)
+
+#### RelaySGD vs Allreduce
+
+![](plots/algo_comparison_2.png)
 
 #### Comparing different topologies of RelaySGD
 
-![](plots/cifar_topo_comparison.png)
+![](plots/relay_topologies.png)

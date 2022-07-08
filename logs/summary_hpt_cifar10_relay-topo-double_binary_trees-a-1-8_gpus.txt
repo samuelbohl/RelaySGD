@@ -1,0 +1,6 @@
+Summary relay (double_binary_trees) 8 GPUs alpha=1 50 epochs
+lr=0.01 acc=7060
+lr=0.025 acc=8568
+lr=0.05 acc=8759
+lr=0.075 acc=8833
+lr=0.1 acc=8896

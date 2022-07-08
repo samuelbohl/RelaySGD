@@ -1,0 +1,2 @@
+Summary   alpha=1 GPUs 50 epochs
+lr=0.001 acc=1360

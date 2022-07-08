@@ -1,0 +1,6 @@
+Summary relay (chain) 8 GPUs alpha=0.1 50 epochs
+lr=0.01 acc=7135
+lr=0.025 acc=8646
+lr=0.05 acc=8763
+lr=0.075 acc=8881
+lr=0.1 acc=1000

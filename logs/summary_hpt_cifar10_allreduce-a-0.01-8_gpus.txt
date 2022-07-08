@@ -1,0 +1,6 @@
+Summary   alpha=0.01 GPUs 50 epochs
+lr=0.01 acc=8691
+lr=0.025 acc=8822
+lr=0.05 acc=8902
+lr=0.075 acc=8926
+lr=0.1 acc=8894

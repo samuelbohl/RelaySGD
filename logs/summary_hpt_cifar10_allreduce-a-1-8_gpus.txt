@@ -1,0 +1,6 @@
+Summary allreduce alpha=1 GPUs 50 epochs
+lr=0.01 acc=8688
+lr=0.025 acc=8858
+lr=0.05 acc=8923
+lr=0.075 acc=8887
+lr=0.1 acc=8905

@@ -1,0 +1,33 @@
+2022-07-08 09:02:22,535 INFO:Added key: store_based_barrier_key:1 to store for rank: 0
+2022-07-08 09:02:22,546 INFO:Rank 0: Completed store-based barrier for key:store_based_barrier_key:1 with 8 nodes.
+2022-07-08 09:02:30,957 INFO:Model: resnet50
+2022-07-08 09:02:30,957 INFO:Batch size: 32
+2022-07-08 09:02:30,957 INFO:Number of GPUs: 8
+2022-07-08 09:02:30,957 INFO:Running warmup...
+2022-07-08 09:02:34,459 INFO:BatchIdx: 0 TrainLoss: 6.972118
+2022-07-08 09:02:37,316 INFO:Running benchmark...
+2022-07-08 09:02:37,622 INFO:BatchIdx: 10 TrainLoss: 5.778857
+2022-07-08 09:02:40,356 INFO:Iter #0: 842.3 img/sec GPU
+2022-07-08 09:02:40,663 INFO:BatchIdx: 20 TrainLoss: 5.555262
+2022-07-08 09:02:43,374 INFO:Iter #1: 848.3 img/sec GPU
+2022-07-08 09:02:43,678 INFO:BatchIdx: 30 TrainLoss: 5.467419
+2022-07-08 09:02:46,390 INFO:Iter #2: 849.0 img/sec GPU
+2022-07-08 09:02:46,693 INFO:BatchIdx: 40 TrainLoss: 5.425364
+2022-07-08 09:02:49,404 INFO:Iter #3: 849.7 img/sec GPU
+2022-07-08 09:02:49,707 INFO:BatchIdx: 50 TrainLoss: 5.406199
+2022-07-08 09:02:52,436 INFO:Iter #4: 844.3 img/sec GPU
+2022-07-08 09:02:52,739 INFO:BatchIdx: 60 TrainLoss: 5.405108
+2022-07-08 09:02:55,462 INFO:Iter #5: 846.3 img/sec GPU
+2022-07-08 09:02:55,766 INFO:BatchIdx: 70 TrainLoss: 5.378120
+2022-07-08 09:02:58,490 INFO:Iter #6: 845.7 img/sec GPU
+2022-07-08 09:02:58,791 INFO:BatchIdx: 80 TrainLoss: 5.377233
+2022-07-08 09:03:01,502 INFO:Iter #7: 850.0 img/sec GPU
+2022-07-08 09:03:01,801 INFO:BatchIdx: 90 TrainLoss: 5.354145
+2022-07-08 09:03:04,511 INFO:Iter #8: 851.0 img/sec GPU
+2022-07-08 09:03:04,814 INFO:BatchIdx: 100 TrainLoss: 5.363734
+2022-07-08 09:03:07,535 INFO:Iter #9: 846.7 img/sec GPU
+2022-07-08 09:03:07,536 INFO:Img/sec per GPU: 105.9 +-0.6
+2022-07-08 09:03:07,536 INFO:Total img/sec on 8 GPU(s): 847.3 +-5.1
+*****************************************
+Setting OMP_NUM_THREADS environment variable for each process to be 1 in default, to avoid your system being overloaded, please further tune the variable for optimal performance in your application as needed. 
+*****************************************

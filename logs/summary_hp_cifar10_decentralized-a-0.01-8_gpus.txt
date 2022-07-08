@@ -1,0 +1,7 @@
+Summary decentralized 8 alpha=0.01 GPUs 100 epochs
+lr=0.001 acc=6088
+lr=0.005 acc=3212
+lr=0.01 acc=4720
+lr=0.05 acc=1000
+lr=0.1 acc=5758
+lr=0.5 acc=1000

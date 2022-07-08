@@ -1,0 +1,7 @@
+Summary relay 8 alpha=0.01 GPUs 100 epochs
+lr=0.001 acc=8777
+lr=0.005 acc=8799
+lr=0.01 acc=8792
+lr=0.05 acc=8812
+lr=0.1 acc=8760
+lr=0.5 acc=8784
