@@ -1,7 +1,0 @@
-Summary allreduce 8 alpha=1 GPUs 100 epochs
-lr=0.001 acc=8921
-lr=0.005 acc=8921
-lr=0.01 acc=8932
-lr=0.05 acc=8899
-lr=0.1 acc=8946
-lr=0.5 acc=8909
