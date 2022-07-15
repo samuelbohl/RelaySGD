@@ -19,7 +19,6 @@ class RelayAlgorithmImpl(AlgorithmImpl):
     def __init__(
         self,
         process_group: BaguaProcessGroup,
-        hierarchical: bool = True,
         communication_interval: int = 1,
         optimizer: Optimizer = None,
         topology: str = "binary_tree"
@@ -29,13 +28,11 @@ class RelayAlgorithmImpl(AlgorithmImpl):
 
         Args:
             process_group (BaguaProcessGroup): The process group to work on.
-            hierarchical (bool): Enable hierarchical communication.
             communication_interval (int): Number of iterations between two communication steps.
             optimizer (Optimizer): A torch Optimizer initialized with model parameters.
             topology (str): Can be ``"binary_tree"``,  ``"chain"``, ``"double_binary_trees"``.
         """
         super(RelayAlgorithmImpl, self).__init__(process_group)
-        self.hierarchical = hierarchical
         self.communication_interval = communication_interval
         self.cuda_event = torch.cuda.Event()
         self.m_recv = {}
@@ -285,7 +282,6 @@ class RelayAlgorithmImpl(AlgorithmImpl):
 class RelayAlgorithm(Algorithm):
     def __init__(
         self,
-        hierarchical: bool = True,
         communication_interval: int = 1,
         optimizer: Optimizer = None,
         topology: str = "binary_tree"
@@ -294,12 +290,10 @@ class RelayAlgorithm(Algorithm):
         Create an instance of the RelaySGD algorithm.
 
         Args:
-            hierarchical (bool): Enable hierarchical communication.
             communication_interval (int): Number of iterations between two communication steps.
             optimizer (Optimizer): A torch Optimizer initialized with model parameters.
-            topology (str): Can be `"random_binary_trees"`` , ``"binary_tree"`` or ``"chain"``.
+            topology (str): Can be `"double_binary_trees"`` , ``"binary_tree"`` or ``"chain"``.
         """
-        self.hierarchical = hierarchical
         self.communication_interval = communication_interval
         self.optimizer = optimizer
         self.topology = topology
@@ -307,7 +301,6 @@ class RelayAlgorithm(Algorithm):
     def reify(self, process_group: BaguaProcessGroup) -> RelayAlgorithmImpl:
         return RelayAlgorithmImpl(
             process_group,
-            hierarchical=self.hierarchical,
             communication_interval=self.communication_interval,
             optimizer=self.optimizer,
             topology=self.topology
