@@ -1,6 +1,6 @@
 # RelaySGD
 
-Implementation of the decentralized learning algorithm RelaySGD[^1] inside of Bagua[^2] for my [Bachelor Thesis](bachelor_thesis_samuel_bohl_final.pdf)
+Implementation of the decentralized learning algorithm RelaySGD[^1] inside of Bagua[^2] for my [Bachelor Thesis](bachelor_thesis_samuel_bohl_final.pdf).
 
 [^1]: https://doi.org/10.48550/arXiv.2110.04175
 
